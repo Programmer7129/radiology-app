@@ -2,28 +2,20 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Box, Button, Container, Paper, Typography, CircularProgress, TextField, Select, MenuItem, FormControl, InputLabel, Divider, List, ListItem, ListItemText, Tab, Tabs } from '@mui/material';
+import Image from 'next/image'; // Import next/image
+import { Box, Button, Container, Paper, Typography, CircularProgress, TextField, Tab, Tabs, Divider, List, ListItem, ListItemText } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PrintIcon from '@mui/icons-material/Print';
 import DescriptionIcon from '@mui/icons-material/Description';
 import LinkIcon from '@mui/icons-material/Link';
-import { SageMakerRuntimeClient, InvokeEndpointCommand } from "@aws-sdk/client-sagemaker-runtime";
 
-// Initialize the SageMaker Runtime client
-const client = new SageMakerRuntimeClient({
-  region: process.env.NEXT_PUBLIC_AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
-  },
-});
+// Removed unused SageMaker client initialization
 
 export default function Home() {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [analysisType, setAnalysisType] = useState('findings');
   const [inputMethod, setInputMethod] = useState(0); // 0 for upload, 1 for URL
   const [report, setReport] = useState({
     view: '',
@@ -38,12 +30,7 @@ export default function Home() {
     reader.onload = () => {
       setImage(reader.result);
       setImageUrl('');
-      setReport({
-        view: '',
-        sectionAnalysis: {},
-        findings: '',
-        impression: ''
-      });
+      setReport({ view: '', sectionAnalysis: {}, findings: '', impression: '' });
     };
     reader.readAsDataURL(file);
   }, []);
@@ -51,12 +38,7 @@ export default function Home() {
   const handleUrlChange = (event) => {
     setImageUrl(event.target.value);
     setImage(null);
-    setReport({
-      view: '',
-      sectionAnalysis: {},
-      findings: '',
-      impression: ''
-    });
+    setReport({ view: '', sectionAnalysis: {}, findings: '', impression: '' });
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -72,10 +54,6 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      // --- CHANGE IS HERE ---
-      // Determine the correct image path to send.
-      // If a local file is uploaded, 'image' will be a Base64 Data URL.
-      // If a URL is entered, 'imageUrl' will have the value.
       const imagePath = image || imageUrl;
 
       if (!imagePath) {
@@ -83,7 +61,6 @@ export default function Home() {
       }
 
       // 1. Section-by-section analysis
-      // We now send the single, correct path in the 'paths' array.
       const sectionResponse = await fetch('http://localhost:8000/api/generate-report', {
         method: 'POST',
         headers: {
@@ -91,7 +68,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           task: 'section_by_section',
-          paths: [imagePath] // Send the determined path
+          paths: [imagePath]
         }),
       });
 
@@ -103,7 +80,7 @@ export default function Home() {
       const sectionData = await sectionResponse.json();
       const sectionAnalysis = sectionData.section_by_section || {};
 
-      // 2. Summarization (this part remains the same)
+      // 2. Summarization
       const combinedFindings = Object.entries(sectionAnalysis)
         .map(([anatomy, text]) => `${anatomy}: ${text}`)
         .join('\n');
@@ -128,7 +105,7 @@ export default function Home() {
       const summary = summaryData.summary || '';
 
       setReport({
-        view: '',
+        view: '', // Assuming view is not set by the backend for now
         sectionAnalysis,
         findings: combinedFindings,
         impression: summary
@@ -164,7 +141,7 @@ export default function Home() {
               `).join('')}
             </div>
           ` : ''}
-          ${report.findings ? `<div class="section"><div class="title">Findings:</div>${report.findings}</div>` : ''}
+          ${report.findings ? `<div class="section"><div class="title">Findings:</div><pre>${report.findings}</pre></div>` : ''}
           ${report.impression ? `<div class="section"><div class="title">Impression:</div>${report.impression}</div>` : ''}
         </body>
       </html>
@@ -227,13 +204,16 @@ export default function Home() {
         )}
 
         {(image || imageUrl) && (
-          <Box sx={{ display: 'flex', gap: 4 }}>
+          <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', md: 'row' } }}>
             <Box sx={{ flex: 1 }}>
-              <Paper sx={{ p: 2 }}>
-                <img
+              {/* FIX 1: Replaced <img> with next/image <Image> */}
+              <Paper sx={{ p: 2, position: 'relative', height: { xs: '300px', md: '400px' } }}>
+                <Image
                   src={image || imageUrl}
                   alt="X-ray"
-                  style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'contain' }}
+                  fill
+                  style={{ objectFit: 'contain' }}
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </Paper>
               
@@ -250,7 +230,7 @@ export default function Home() {
             </Box>
 
             <Box sx={{ flex: 1 }}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={{ p: 3, minHeight: '400px' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6">Report</Typography>
                   <Button
@@ -269,6 +249,7 @@ export default function Home() {
                   </Typography>
                 )}
 
+                {/* Report sections remain the same */}
                 {report.view && (
                   <>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>View Classification</Typography>
@@ -280,9 +261,9 @@ export default function Home() {
                 {Object.keys(report.sectionAnalysis).length > 0 && (
                   <>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>Section Analysis</Typography>
-                    <List>
+                    <List dense>
                       {Object.entries(report.sectionAnalysis).map(([section, content]) => (
-                        <ListItem key={section} sx={{ py: 1 }}>
+                        <ListItem key={section} sx={{ py: 0 }}>
                           <ListItemText
                             primary={section}
                             secondary={content}
@@ -298,7 +279,7 @@ export default function Home() {
                 {report.findings && (
                   <>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>Findings</Typography>
-                    <Typography>{report.findings}</Typography>
+                    <Typography component="pre" sx={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{report.findings}</Typography>
                     <Divider sx={{ my: 2 }} />
                   </>
                 )}
@@ -310,11 +291,19 @@ export default function Home() {
                   </>
                 )}
 
-                {!report.view && !report.findings && !report.impression && Object.keys(report.sectionAnalysis).length === 0 && (
+                {!loading && !error && !report.findings && !report.impression && (
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No report generated yet. Upload an image and click "Generate Report".
+                    {/* FIX 2: Replaced double quotes with single quotes */}
+                    No report generated yet. Upload an image and click 'Generate Report'.
                   </Typography>
                 )}
+
+                {loading && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+
               </Paper>
             </Box>
           </Box>
