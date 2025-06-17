@@ -2,21 +2,19 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import Image from 'next/image'; // Import next/image
+import Image from 'next/image';
 import { Box, Button, Container, Paper, Typography, CircularProgress, TextField, Tab, Tabs, Divider, List, ListItem, ListItemText } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PrintIcon from '@mui/icons-material/Print';
 import DescriptionIcon from '@mui/icons-material/Description';
 import LinkIcon from '@mui/icons-material/Link';
 
-// Removed unused SageMaker client initialization
-
 export default function Home() {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [inputMethod, setInputMethod] = useState(0); // 0 for upload, 1 for URL
+  const [inputMethod, setInputMethod] = useState(0);
   const [report, setReport] = useState({
     view: '',
     sectionAnalysis: {},
@@ -105,7 +103,7 @@ export default function Home() {
       const summary = summaryData.summary || '';
 
       setReport({
-        view: '', // Assuming view is not set by the backend for now
+        view: '',
         sectionAnalysis,
         findings: combinedFindings,
         impression: summary
@@ -206,7 +204,6 @@ export default function Home() {
         {(image || imageUrl) && (
           <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', md: 'row' } }}>
             <Box sx={{ flex: 1 }}>
-              {/* FIX 1: Replaced <img> with next/image <Image> */}
               <Paper sx={{ p: 2, position: 'relative', height: { xs: '300px', md: '400px' } }}>
                 <Image
                   src={image || imageUrl}
@@ -249,7 +246,6 @@ export default function Home() {
                   </Typography>
                 )}
 
-                {/* Report sections remain the same */}
                 {report.view && (
                   <>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>View Classification</Typography>
@@ -293,8 +289,8 @@ export default function Home() {
 
                 {!loading && !error && !report.findings && !report.impression && (
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    {/* FIX 2: Replaced double quotes with single quotes */}
-                    No report generated yet. Upload an image and click 'Generate Report'.
+                    {/* FIX: Replaced ' with &apos; to satisfy the linter */}
+                    No report generated yet. Upload an image and click &apos;Generate Report&apos;.
                   </Typography>
                 )}
 
