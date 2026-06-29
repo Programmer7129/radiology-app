@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ----------------------------------------------------------------------------
+   RadAI design system — clinical, calm, pure white. Single light theme.
+---------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #ffffff;
+  --color-panel: #f7f9fc;
+  --color-ink: #0d1626;        /* primary text */
+  --color-muted: #5b6b80;      /* secondary text */
+  --color-faint: #8a99ad;      /* tertiary text */
+  --color-line: #e7edf4;       /* hairline borders */
+
+  --color-primary: #0b5cad;    /* clinical blue */
+  --color-primary-600: #0a4f96;
+  --color-primary-50: #eef5fc;
+  --color-accent: #0e9aa7;     /* medical teal */
+
+  --color-ok: #15803d;
+  --color-ok-50: #effaf1;
+  --color-warn: #b45309;
+  --color-warn-50: #fdf6ec;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --radius: 0.8rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
+
+/* tabular numerals for any measured values */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* subtle medical grid texture for hero/empty areas */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(11, 92, 173, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 92, 173, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.shadow-card {
+  box-shadow: 0 1px 2px rgba(13, 22, 38, 0.04), 0 8px 24px -12px rgba(13, 22, 38, 0.12);
+}
+
+.shadow-float {
+  box-shadow: 0 2px 6px rgba(13, 22, 38, 0.06), 0 18px 48px -16px rgba(13, 22, 38, 0.22);
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.scanline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(14, 154, 167, 0.35), transparent);
+  height: 40%;
+  animation: scanline 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.pulse-soft { animation: pulse-soft 1.6s ease-in-out infinite; }
